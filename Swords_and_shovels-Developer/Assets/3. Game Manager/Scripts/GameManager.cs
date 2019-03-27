@@ -3,22 +3,39 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public class GameManager : MonoBehaviour {
+public class GameManager : Singleton<GameManager> {
 
 	// Revisar en qué nivel estamos
 	// load and unload game levels
 	// revisar en qué estado de juego estamos
 	// generar otros persistent systems
 
-	private string _currentLevelName = string.Empty;
+	public GameObject[] SystemPrefabs;
 
+	List<GameObject> _instancedSystemPrefabs;
 	List<AsyncOperation> _loadOperations;
+	private string _currentLevelName = string.Empty;
 
 	private void Start(){
 
 		DontDestroyOnLoad(gameObject);//para asegurar que nuestro game manager permanecerá siempre
+
+		_instancedSystemPrefabs = new List<GameObject>();
 		_loadOperations = new List<AsyncOperation>();
+
+		InstantiateSystemPrefabs();
 		LoadLevel("Main");
+	}
+
+	//Llenamos la lista de SystemPrefabs con todas las instancias
+	void InstantiateSystemPrefabs(){
+
+		GameObject prefabInstance;
+		for (int i = 0; i < SystemPrefabs.Length; ++i)
+		{
+			prefabInstance = Instantiate(SystemPrefabs[i]);
+			_instancedSystemPrefabs.Add(prefabInstance);
+		}
 	}
 
 	void OnLoadOperationComplete(AsyncOperation ao){
@@ -57,5 +74,16 @@ public class GameManager : MonoBehaviour {
 			return;
 		}
 		ao.completed += OnUnLoadOperationComplete;
+	}
+
+	protected override void OnDestroy(){
+
+		base.OnDestroy();
+
+		for (int i = 0; i < _instancedSystemPrefabs.Count; i++)
+		{
+			Destroy(_instancedSystemPrefabs[i]);
+		}
+		_instancedSystemPrefabs.Clear();
 	}
 }
