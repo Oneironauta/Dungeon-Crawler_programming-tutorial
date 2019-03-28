@@ -1,7 +1,10 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.SceneManagement;
+
+[System.Serializable] public class EventGameState : UnityEvent<GameManager.GameState, GameManager.GameState> {}
 
 public class GameManager : Singleton<GameManager> {
 
@@ -10,11 +13,25 @@ public class GameManager : Singleton<GameManager> {
 	// revisar en qué estado de juego estamos
 	// generar otros persistent systems
 
+	// PREGAME, RUNNING, PAUSED
+	public enum GameState{
+		PREGAME,
+		RUNNING,
+		PAUSED
+	}
+
 	public GameObject[] SystemPrefabs;
+	public EventGameState OnGameStateChanged;
 
 	List<GameObject> _instancedSystemPrefabs;
 	List<AsyncOperation> _loadOperations;
+	GameState _currentGameState = GameState.PREGAME;
 	private string _currentLevelName = string.Empty;
+
+	public GameState CurrentGameState{
+		get{ return _currentGameState; }
+		private set{ _currentGameState = value;}
+	}
 
 	private void Start(){
 
@@ -24,7 +41,30 @@ public class GameManager : Singleton<GameManager> {
 		_loadOperations = new List<AsyncOperation>();
 
 		InstantiateSystemPrefabs();
-		LoadLevel("Main");
+	}
+
+	void UpdateStare(GameState state){
+
+		GameState previousGameState = _currentGameState;
+		_currentGameState = state;
+
+		switch(_currentGameState){
+			case GameState.PREGAME:
+			break;
+
+			case GameState.RUNNING:
+			break;
+
+			case GameState.PAUSED:
+			break;
+
+			default:
+			break;
+		}
+
+		OnGameStateChanged.Invoke(_currentGameState, previousGameState);
+		// mandar mensajes
+		// hacer transición de escenas
 	}
 
 	//Llenamos la lista de SystemPrefabs con todas las instancias
@@ -43,8 +83,10 @@ public class GameManager : Singleton<GameManager> {
 		if (_loadOperations.Contains(ao))
 		{
 			_loadOperations.Remove(ao);
-			// mandar mensajes
-			// hacer transición de escenas
+			if(_loadOperations.Count == 0){
+				UpdateStare(GameState.RUNNING);
+			}
+			
 		}
 		Debug.Log("Load complete.");
 	}
@@ -85,5 +127,10 @@ public class GameManager : Singleton<GameManager> {
 			Destroy(_instancedSystemPrefabs[i]);
 		}
 		_instancedSystemPrefabs.Clear();
+	}
+
+	public void StartGame(){
+		
+		LoadLevel("Main");
 	}
 }
