@@ -1,10 +1,10 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Events;
+
 using UnityEngine.SceneManagement;
 
-[System.Serializable] public class EventGameState : UnityEvent<GameManager.GameState, GameManager.GameState> {}
+
 
 public class GameManager : Singleton<GameManager> {
 
@@ -21,7 +21,7 @@ public class GameManager : Singleton<GameManager> {
 	}
 
 	public GameObject[] SystemPrefabs;
-	public EventGameState OnGameStateChanged;
+	public Events.EventGameState OnGameStateChanged;
 
 	List<GameObject> _instancedSystemPrefabs;
 	List<AsyncOperation> _loadOperations;
@@ -41,6 +41,8 @@ public class GameManager : Singleton<GameManager> {
 		_loadOperations = new List<AsyncOperation>();
 
 		InstantiateSystemPrefabs();
+
+		UIManager.Instance.OnMainMenuFadeComplete.AddListener(HandleMainMenuFadeComplete);
 	}
 
 	private void Update(){
@@ -52,6 +54,13 @@ public class GameManager : Singleton<GameManager> {
 		{
 			Debug.Log("Se presionó Escape");
 			TogglePause();
+		}
+	}
+
+	void HandleMainMenuFadeComplete(bool fadeOut){
+		if (!fadeOut)
+		{
+			UnloadLevel(_currentLevelName);	
 		}
 	}
 
@@ -152,5 +161,15 @@ public class GameManager : Singleton<GameManager> {
 	public void TogglePause(){
 
 		UpdateState( _currentGameState == GameState.RUNNING ? GameState.PAUSED : GameState.RUNNING);
+	}
+
+	public void RestartGame(){
+		UpdateState(GameState.PREGAME); //Dejaremos que la máquina de estados haga el cambio de escenas
+	}
+
+	public void QuitGame(){
+		//Aquí se pueden features al salir
+
+		Application.Quit();
 	}
 }

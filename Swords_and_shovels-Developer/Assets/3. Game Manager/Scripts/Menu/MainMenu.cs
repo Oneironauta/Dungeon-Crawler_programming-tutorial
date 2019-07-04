@@ -12,6 +12,7 @@ public class MainMenu : MonoBehaviour {
 	// Track the AnimationClips for fade in/out
 	[SerializeField] private AnimationClip _fadeOutAnimation;
 	[SerializeField] private AnimationClip _fadeInAnimation;
+	public Events.EventFadeComplete OnMainMenuFadeComplete;
 
 	void Start(){
 
@@ -21,17 +22,21 @@ public class MainMenu : MonoBehaviour {
 	//No todas las transiciones de estado son iguales, para eso hay que saber el estado del que venimos y al que vamos
 	void HandleGameStateChange(GameManager.GameState currentState, GameManager.GameState previousState){
 		if(previousState == GameManager.GameState.PREGAME && currentState == GameManager.GameState.RUNNING){
-
 			FadeOut();
+		}
+		if(previousState != GameManager.GameState.PREGAME && currentState == GameManager.GameState.PREGAME){
+			FadeIn();
 		}
 	}
 	public void OnFadeOutComplete(){
 		Debug.LogWarning("FadeOut Complete");
+		OnMainMenuFadeComplete.Invoke(true);
+
 	}
 
 	public void OnFadeInComplete(){
 		Debug.LogWarning("FadeIn Complete");
-
+		OnMainMenuFadeComplete.Invoke(false);
 		UIManager.Instance.SetDummyCameraActive(true);
 	}
 	
